@@ -9,7 +9,7 @@ import (
 )
 
 type RedisClient struct {
-	client *redis.Client
+	Client *redis.Client
 }
 
 func NewRedisClient(ctx context.Context, host, password string, port int) (*RedisClient, error) {
@@ -26,14 +26,14 @@ func NewRedisClient(ctx context.Context, host, password string, port int) (*Redi
 	}
 
 	return &RedisClient{
-		client: client,
+		Client: client,
 	}, nil
 }
 
 func (r *RedisClient) Get(ctx context.Context, key string) (string, error) {
-	return r.client.Get(ctx, key).Result()
+	return r.Client.Get(ctx, key).Result()
 }
 
 func (r *RedisClient) Close() error {
-	return r.client.Close()
+	return r.Client.Close()
 }

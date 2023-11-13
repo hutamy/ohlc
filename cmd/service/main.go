@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"ohlc/config"
 	"ohlc/redis"
+	"ohlc/service"
 	"time"
 )
 
@@ -24,27 +25,20 @@ func main() {
 		}
 	}()
 
-	// Create a new web server
+	service := service.NewService(rdb)
 	http.HandleFunc("/ohlc", func(w http.ResponseWriter, r *http.Request) {
 		// Get the stock code from the query parameters
 		stockCode := r.URL.Query().Get("stock_code")
 
-		var ohlcSummary string
-		ohlcSummary, err = rdb.Get(ctx, stockCode)
+		var ohlcSummary map[string]interface{}
+		ohlcSummary, err = service.GetOHLC(ctx, stockCode)
 		if err != nil {
-			// If the OHLC summary is not found, return an error message
-			http.Error(w, "OHLC summary not found", http.StatusNotFound)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		var jsonOhlcSummary map[string]interface{}
-		err = json.Unmarshal([]byte(ohlcSummary), &jsonOhlcSummary)
-		if err != nil {
-			log.Printf("Failed to parse transaction: %v", err)
-		}
-
 		w.Header().Set("Content-Type", "application/json")
-		if err = json.NewEncoder(w).Encode(jsonOhlcSummary); err != nil {
+		if err = json.NewEncoder(w).Encode(ohlcSummary); err != nil {
 			panic(err)
 		}
 	})
