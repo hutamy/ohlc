@@ -10,22 +10,14 @@ import (
 	"testing"
 
 	pb "ohlc/proto"
-
-	r "github.com/redis/go-redis/v9"
 )
 
 func TestGetOHLC(t *testing.T) {
 	// Create a Redis client for testing purposes
-	rdb := r.NewClient(&r.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
+	rdb, _ := redis.NewRedisClient(context.Background())
 
 	// Create a new service instance
-	svc := service.NewService(&redis.RedisClient{
-		Client: rdb,
-	})
+	svc := service.NewService(rdb)
 
 	// Define test cases
 	testCases := []struct {
@@ -59,7 +51,7 @@ func TestGetOHLC(t *testing.T) {
 			if tc.wantErr == nil {
 				// Set test data
 				val, _ := json.Marshal(tc.wantResult)
-				_ = rdb.Set(context.Background(), tc.stockCode.StockCode, string(val), 0)
+				_ = rdb.Set(context.Background(), tc.stockCode.StockCode, string(val))
 			}
 
 			// Call GetOHLC method

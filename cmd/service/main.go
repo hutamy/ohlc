@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"ohlc/config"
 	"ohlc/redis"
 	"ohlc/service"
 
@@ -15,9 +14,8 @@ import (
 )
 
 func main() {
-	cfg := config.SetConfig()
 	ctx := context.Background()
-	rdb, err := redis.NewRedisClient(ctx, cfg.RedisHost, cfg.RedisPassword, cfg.RedisPort)
+	rdb, err := redis.NewRedisClient(ctx)
 	if err != nil {
 		panic(err)
 	}
