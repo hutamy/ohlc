@@ -29,3 +29,11 @@ func NewRedisClient(ctx context.Context, host, password string, port int) (*Redi
 		client: client,
 	}, nil
 }
+
+func (r *RedisClient) Get(ctx context.Context, key string) (string, error) {
+	return r.client.Get(ctx, key).Result()
+}
+
+func (r *RedisClient) Close() error {
+	return r.client.Close()
+}
