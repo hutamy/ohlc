@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"ohlc/redis"
 	"ohlc/service"
 	"reflect"
 	"testing"
+
+	pb "ohlc/proto"
 
 	r "github.com/redis/go-redis/v9"
 )
@@ -29,25 +30,25 @@ func TestGetOHLC(t *testing.T) {
 	// Define test cases
 	testCases := []struct {
 		name       string
-		stockCode  string
-		wantResult map[string]interface{}
+		stockCode  *pb.StockRequest
+		wantResult *pb.Summary
 		wantErr    error
 	}{
 		{
 			name:      "valid stock code",
-			stockCode: "AAPL",
-			wantResult: map[string]interface{}{
-				"open":  100.0,
-				"high":  110.0,
-				"low":   90.0,
-				"close": 105.0,
+			stockCode: &pb.StockRequest{StockCode: "AAPL"},
+			wantResult: &pb.Summary{
+				Open:  100.0,
+				High:  110.0,
+				Low:   90.0,
+				Close: 105.0,
 			},
 			wantErr: nil,
 		},
 		{
 			name:       "invalid stock code",
-			stockCode:  "INVALID",
-			wantResult: map[string]interface{}{},
+			stockCode:  &pb.StockRequest{StockCode: "INVALID"},
+			wantResult: nil,
 			wantErr:    errors.New("OHLC summary not found"),
 		},
 	}
@@ -58,7 +59,7 @@ func TestGetOHLC(t *testing.T) {
 			if tc.wantErr == nil {
 				// Set test data
 				val, _ := json.Marshal(tc.wantResult)
-				_ = rdb.Set(context.Background(), tc.stockCode, string(val), 0)
+				_ = rdb.Set(context.Background(), tc.stockCode.StockCode, string(val), 0)
 			}
 
 			// Call GetOHLC method
@@ -72,7 +73,6 @@ func TestGetOHLC(t *testing.T) {
 
 			// Check if result matches expected result
 			if !reflect.DeepEqual(gotResult, tc.wantResult) {
-				fmt.Println(gotResult, tc.wantResult)
 				t.Errorf("GetOHLC() = %v, want %v", gotResult, tc.wantResult)
 			}
 		})

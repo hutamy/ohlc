@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"log"
-	"net/http"
+	"net"
 	"ohlc/config"
 	"ohlc/redis"
 	"ohlc/service"
-	"time"
+
+	pb "ohlc/proto"
+
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -25,31 +28,17 @@ func main() {
 		}
 	}()
 
-	service := service.NewService(rdb)
-	http.HandleFunc("/ohlc", func(w http.ResponseWriter, r *http.Request) {
-		// Get the stock code from the query parameters
-		stockCode := r.URL.Query().Get("stock_code")
-
-		var ohlcSummary map[string]interface{}
-		ohlcSummary, err = service.GetOHLC(ctx, stockCode)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		if err = json.NewEncoder(w).Encode(ohlcSummary); err != nil {
-			panic(err)
-		}
-	})
-
-	server := &http.Server{
-		Addr:              ":8080",
-		ReadHeaderTimeout: 3 * time.Second,
+	listener, err := net.Listen("tcp", "localhost:50051")
+	if err != nil {
+		panic(err)
 	}
 
-	err = server.ListenAndServe()
-	if err != nil {
+	server := grpc.NewServer()
+	service := service.NewService(rdb)
+	pb.RegisterOHLCServiceServer(server, service)
+
+	fmt.Println("Server is listening on port 50051...")
+	if err := server.Serve(listener); err != nil {
 		panic(err)
 	}
 }

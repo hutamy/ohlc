@@ -6,26 +6,31 @@ import (
 	"fmt"
 	"log"
 	"ohlc/redis"
+
+	pb "ohlc/proto"
 )
 
 type Service struct {
+	pb.UnimplementedOHLCServiceServer
 	rdb *redis.RedisClient
 }
 
 func NewService(rdb *redis.RedisClient) *Service {
-	return &Service{rdb}
+	return &Service{
+		rdb: rdb,
+	}
 }
 
-func (s *Service) GetOHLC(ctx context.Context, stockCode string) (map[string]interface{}, error) {
+func (s *Service) GetOHLC(ctx context.Context, req *pb.StockRequest) (*pb.Summary, error) {
 	var ohlcSummary string
 	var err error
 
-	ohlcSummary, err = s.rdb.Get(ctx, stockCode)
+	ohlcSummary, err = s.rdb.Get(ctx, req.StockCode)
 	if err != nil {
-		return map[string]interface{}{}, fmt.Errorf("OHLC summary not found")
+		return nil, fmt.Errorf("OHLC summary not found")
 	}
 
-	var jsonOhlcSummary map[string]interface{}
+	var jsonOhlcSummary *pb.Summary
 	err = json.Unmarshal([]byte(ohlcSummary), &jsonOhlcSummary)
 	if err != nil {
 		log.Printf("Failed to parse transaction: %v", err)

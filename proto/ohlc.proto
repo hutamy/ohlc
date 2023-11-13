@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package ohlc;
+
+option go_package = ".";
+
+message Summary {
+  string stock_code = 1;
+  int32 prev = 2;
+  int32 open = 3;
+  int32 high = 4;
+  int32 low = 5;
+  int32 close = 6;
+  int32 average = 7;
+  int32 volume = 8;
+  int32 value = 9;
+}
+
+message Transaction {
+  string stock_code = 1;
+  string type = 2;
+  int32 price = 3;
+  int32 quantity = 4;
+}
+
+message StockRequest {
+  string stock_code = 1;
+}
+
+service OHLCService {
+  rpc GetOHLC(StockRequest) returns (Summary);
+}
