@@ -1,15 +1,16 @@
-package service_test
+package service
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"ohlc/redis"
-	"ohlc/service"
 	"reflect"
 	"testing"
 
 	pb "ohlc/proto"
+
+	"google.golang.org/protobuf/proto"
 )
 
 func TestGetOHLC(t *testing.T) {
@@ -17,7 +18,7 @@ func TestGetOHLC(t *testing.T) {
 	rdb, _ := redis.NewRedisClient(context.Background())
 
 	// Create a new service instance
-	svc := service.NewService(rdb)
+	svc := NewService(rdb)
 
 	// Define test cases
 	testCases := []struct {
@@ -30,10 +31,10 @@ func TestGetOHLC(t *testing.T) {
 			name:      "valid stock code",
 			stockCode: &pb.StockRequest{StockCode: "AAPL"},
 			wantResult: &pb.Summary{
-				Open:  100.0,
-				High:  110.0,
-				Low:   90.0,
-				Close: 105.0,
+				Open:  100,
+				High:  110,
+				Low:   90,
+				Close: 105,
 			},
 			wantErr: nil,
 		},
@@ -50,8 +51,8 @@ func TestGetOHLC(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.wantErr == nil {
 				// Set test data
-				val, _ := json.Marshal(tc.wantResult)
-				_ = rdb.Set(context.Background(), tc.stockCode.StockCode, string(val))
+				resByte, _ := proto.Marshal(tc.wantResult)
+				rdb.Set(context.Background(), tc.stockCode.StockCode, resByte)
 			}
 
 			// Call GetOHLC method
@@ -63,8 +64,13 @@ func TestGetOHLC(t *testing.T) {
 				return
 			}
 
-			// Check if result matches expected result
-			if !reflect.DeepEqual(gotResult, tc.wantResult) {
+			res := &pb.Summary{}
+			want := &pb.Summary{}
+			json.Unmarshal([]byte(gotResult.String()), res)
+			json.Unmarshal([]byte(tc.wantResult.String()), want)
+
+			// Check if result matches expected results
+			if !reflect.DeepEqual(res, want) {
 				t.Errorf("GetOHLC() = %v, want %v", gotResult, tc.wantResult)
 			}
 		})
