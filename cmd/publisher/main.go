@@ -16,6 +16,6 @@ func main() {
 			log.Fatalln("Error closing connection:", err)
 		}
 	}()
-	publisher := transaction.NewTrasactionPublisher(conn)
+	publisher := transaction.NewTransactionPublisher(conn)
 	publisher.Run(ctx)
 }

@@ -12,19 +12,19 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type TrasactionConsumer struct {
+type TransactionConsumer struct {
 	reader *kafka.KafkaConsumerClient
 	rdb    *redis.RedisClient
 }
 
-func NewTrasactionConsumer(reader *kafka.KafkaConsumerClient, rdb *redis.RedisClient) *TrasactionConsumer {
-	return &TrasactionConsumer{
+func NewTransactionConsumer(reader *kafka.KafkaConsumerClient, rdb *redis.RedisClient) *TransactionConsumer {
+	return &TransactionConsumer{
 		reader: reader,
 		rdb:    rdb,
 	}
 }
 
-func (t *TrasactionConsumer) Run(ctx context.Context) {
+func (t *TransactionConsumer) Run(ctx context.Context) {
 	for {
 		msg, err := t.reader.ReadMessage(ctx)
 		if err != nil {
@@ -42,16 +42,13 @@ func (t *TrasactionConsumer) Run(ctx context.Context) {
 	}
 }
 
-func (t *TrasactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transaction) {
+func (t *TransactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transaction) {
 	if ohlcMsg == nil {
 		return
 	}
 
 	value := &pb.Summary{}
-	strValue := ""
-	var err error = nil
-
-	strValue, err = t.rdb.Get(ctx, ohlcMsg.StockCode)
+	strValue, err := t.rdb.Get(ctx, ohlcMsg.StockCode)
 	if err == nil {
 		if err = proto.Unmarshal([]byte(strValue), value); err != nil {
 			log.Printf("Failed to unmarshal summary: %v", err)
@@ -59,7 +56,7 @@ func (t *TrasactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transacti
 		}
 	}
 
-	value = t.Calculate(value, ohlcMsg)
+	value = calculate(value, ohlcMsg)
 	bytes, err := proto.Marshal(value)
 	if err != nil {
 		log.Printf("Failed to marshal summary: %v", err)
@@ -70,7 +67,7 @@ func (t *TrasactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transacti
 	}
 }
 
-func (t *TrasactionConsumer) Calculate(summary *pb.Summary, tx *pb.Transaction) *pb.Summary {
+func calculate(summary *pb.Summary, tx *pb.Transaction) *pb.Summary {
 	if tx == nil {
 		return summary
 	}

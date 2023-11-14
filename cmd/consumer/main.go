@@ -28,6 +28,6 @@ func main() {
 		}
 	}()
 
-	consumer := transaction.NewTrasactionConsumer(reader, rdb)
+	consumer := transaction.NewTransactionConsumer(reader, rdb)
 	consumer.Run(ctx)
 }

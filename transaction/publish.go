@@ -23,17 +23,17 @@ type Transaction struct {
 	ExecutionPrice   int    `json:"execution_price,string"`
 }
 
-type TrasactionPublisher struct {
+type TransactionPublisher struct {
 	kafkaConn *kafka.KafkaPublisherClient
 }
 
-func NewTrasactionPublisher(kafkaConn *kafka.KafkaPublisherClient) *TrasactionPublisher {
-	return &TrasactionPublisher{
+func NewTransactionPublisher(kafkaConn *kafka.KafkaPublisherClient) *TransactionPublisher {
+	return &TransactionPublisher{
 		kafkaConn: kafkaConn,
 	}
 }
 
-func (t *TrasactionPublisher) Run(ctx context.Context) {
+func (t *TransactionPublisher) Run(ctx context.Context) {
 	// Read the transaction data from the .ndjson files in the `subsetdata` folder.
 	files, err := ioutil.ReadDir("subsetdata")
 	if err != nil {
@@ -42,51 +42,55 @@ func (t *TrasactionPublisher) Run(ctx context.Context) {
 
 	for _, file := range files {
 		if filepath.Ext(file.Name()) != ".ndjson" {
-			continue
+			return
 		}
 
 		filePath := filepath.Join("subsetdata", file.Name())
 		fileData, err := ioutil.ReadFile(filepath.Clean(filePath))
 		if err != nil {
 			log.Printf("Failed to read file %s: %v", filePath, err)
-			continue
+			return
 		}
 
 		transactions := strings.Split(string(fileData), "\n")
-		for _, txStr := range transactions {
-			if txStr == "" {
-				continue
-			}
+		t.Process(ctx, transactions)
+	}
+}
 
-			var tx Transaction
-			if err := json.Unmarshal([]byte(txStr), &tx); err != nil {
-				log.Printf("Failed to parse transaction: %v", err)
-				continue
-			}
+func (t *TransactionPublisher) Process(ctx context.Context, transactions []string) {
+	for _, txStr := range transactions {
+		if txStr == "" {
+			continue
+		}
 
-			ohlcMsg := &pb.Transaction{
-				Type:      tx.Type,
-				Price:     int32(tx.Price),
-				StockCode: tx.StockCode,
-				Quantity:  int32(tx.Quantity),
-			}
+		var tx Transaction
+		if err := json.Unmarshal([]byte(txStr), &tx); err != nil {
+			log.Printf("Failed to parse transaction: %v", err)
+			continue
+		}
 
-			if tx.Type == "E" || tx.Type == "P" {
-				ohlcMsg.Price = int32(tx.ExecutionPrice)
-				ohlcMsg.Quantity = int32(tx.ExecutedQuantity)
-			}
+		ohlcMsg := &pb.Transaction{
+			Type:      tx.Type,
+			Price:     int32(tx.Price),
+			StockCode: tx.StockCode,
+			Quantity:  int32(tx.Quantity),
+		}
 
-			ohlcBytes, err := proto.Marshal(ohlcMsg)
-			if err != nil {
-				log.Printf("Failed to marshal OHLC message: %v", err)
-				return
-			}
+		if tx.Type == "E" || tx.Type == "P" {
+			ohlcMsg.Price = int32(tx.ExecutionPrice)
+			ohlcMsg.Quantity = int32(tx.ExecutedQuantity)
+		}
 
-			err = t.kafkaConn.Publish(ctx, ohlcBytes)
-			if err != nil {
-				log.Printf("Failed to publish OHLC message to Kafka: %v", err)
-				return
-			}
+		ohlcBytes, err := proto.Marshal(ohlcMsg)
+		if err != nil {
+			log.Printf("Failed to marshal OHLC message: %v", err)
+			return
+		}
+
+		err = t.kafkaConn.Publish(ctx, ohlcBytes)
+		if err != nil {
+			log.Printf("Failed to publish OHLC message to Kafka: %v", err)
+			return
 		}
 	}
 }
