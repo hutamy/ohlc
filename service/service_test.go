@@ -16,7 +16,6 @@ import (
 func TestGetOHLC(t *testing.T) {
 	// Create a Redis client for testing purposes
 	rdb, _ := redis.NewRedisClient(context.Background())
-	defer rdb.Close()
 
 	// Create a new service instance
 	svc := NewService(rdb)

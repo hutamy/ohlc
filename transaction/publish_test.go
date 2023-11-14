@@ -13,11 +13,13 @@ import (
 
 func TestTransactionPublisher_Process(t *testing.T) {
 	ctx := context.Background()
+
 	// create a new kafka connection
 	kafkaConn, _ := kafka.NewKafkaPublisher(ctx)
 
 	// create a new kafka reader
 	kafkaReader, _ := kafka.NewKafkaConsumer()
+
 	publisher := NewTransactionPublisher(kafkaConn)
 
 	// create a new transaction

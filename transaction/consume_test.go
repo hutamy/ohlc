@@ -53,11 +53,9 @@ func TestSetCache(t *testing.T) {
 	// create a new redis client
 	ctx := context.Background()
 	rdb, _ := redis.NewRedisClient(ctx)
-	defer rdb.Close()
 
 	// create a new kafka readerr
 	kafkaReader, _ := kafka.NewKafkaConsumer()
-	defer kafkaReader.Close()
 
 	consumer := NewTransactionConsumer(kafkaReader, rdb)
 
