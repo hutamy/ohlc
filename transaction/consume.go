@@ -73,7 +73,7 @@ func (t *TrasactionConsumer) Calculate(summary *pb.Summary, tx *pb.Transaction) 
 	summary.StockCode = tx.StockCode
 	if tx.Quantity == 0 {
 		summary.Prev = tx.Price
-	} else if tx.Quantity > 0 {
+	} else if tx.Quantity > 0 && tx.Type != "A" {
 		if summary.Open == 0 {
 			summary.Open = tx.Price
 		} else {
@@ -81,12 +81,6 @@ func (t *TrasactionConsumer) Calculate(summary *pb.Summary, tx *pb.Transaction) 
 			summary.High = util.Max(summary.High, tx.Price)
 			summary.Low = util.Min(summary.Low, tx.Price)
 		}
-	}
-
-	if tx.Type == "E" || tx.Type == "P" {
-		summary.Volume += tx.Quantity
-		summary.Value += tx.Price * int32(tx.Quantity)
-		summary.Average = summary.Value / summary.Volume
 	}
 
 	return summary
