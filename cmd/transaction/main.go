@@ -5,6 +5,7 @@ import (
 	"log"
 	"ohlc/kafka"
 	"ohlc/redis"
+	"ohlc/transaction"
 )
 
 func main() {
@@ -26,6 +27,8 @@ func main() {
 			log.Fatalln("Error closing connection:", err)
 		}
 	}()
+	publisher := transaction.NewTrasactionPublisher(conn)
+	publisher.Run(ctx)
 
 	reader, err := kafka.NewKafkaConsumer()
 	defer func() {
@@ -33,4 +36,7 @@ func main() {
 			log.Fatalln("Error closing reader:", err)
 		}
 	}()
+
+	consumer := transaction.NewTrasactionConsumer(reader, rdb)
+	consumer.Run(ctx)
 }
