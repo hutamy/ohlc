@@ -84,13 +84,13 @@ func (t *TransactionPublisher) Process(ctx context.Context, transactions []strin
 		ohlcBytes, err := proto.Marshal(ohlcMsg)
 		if err != nil {
 			log.Printf("Failed to marshal OHLC message: %v", err)
-			return
+			continue
 		}
 
 		err = t.kafkaConn.Publish(ctx, ohlcBytes)
 		if err != nil {
 			log.Printf("Failed to publish OHLC message to Kafka: %v", err)
-			return
+			continue
 		}
 	}
 }

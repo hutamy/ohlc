@@ -56,7 +56,7 @@ func (t *TransactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transact
 		}
 	}
 
-	value = calculate(value, ohlcMsg)
+	value = Calculate(value, ohlcMsg)
 	bytes, err := proto.Marshal(value)
 	if err != nil {
 		log.Printf("Failed to marshal summary: %v", err)
@@ -67,7 +67,7 @@ func (t *TransactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transact
 	}
 }
 
-func calculate(summary *pb.Summary, tx *pb.Transaction) *pb.Summary {
+func Calculate(summary *pb.Summary, tx *pb.Transaction) *pb.Summary {
 	if tx == nil {
 		return summary
 	}
