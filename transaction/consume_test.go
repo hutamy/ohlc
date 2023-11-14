@@ -1,11 +1,15 @@
 package transaction
 
 import (
+	"context"
 	"testing"
 
+	"ohlc/kafka"
 	pb "ohlc/proto"
+	"ohlc/redis"
 
 	"github.com/bmizerany/assert"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestCalculate(t *testing.T) {
@@ -43,4 +47,34 @@ func TestCalculate(t *testing.T) {
 	assert.Equal(t, int32(100), newSummary.Value)
 	assert.Equal(t, int32(100), newSummary.Average)
 	assert.Equal(t, int32(110), newSummary.Prev)
+}
+
+func TestSetCache(t *testing.T) {
+	// create a new redis client
+	ctx := context.Background()
+	rdb, _ := redis.NewRedisClient(ctx)
+	defer rdb.Close()
+
+	// create a new kafka readerr
+	kafkaReader, _ := kafka.NewKafkaConsumer()
+	defer kafkaReader.Close()
+
+	consumer := NewTransactionConsumer(kafkaReader, rdb)
+
+	// create a new transaction
+	txMessage := &pb.Transaction{
+		StockCode: "AAPL",
+		Type:      "A",
+		Quantity:  0,
+		Price:     110,
+	}
+	txSummarry := Calculate(&pb.Summary{}, txMessage)
+	want, _ := proto.Marshal(txSummarry)
+
+	// set the cache
+	consumer.SetCache(ctx, txMessage)
+
+	// get the cached value
+	got, _ := rdb.Get(ctx, txMessage.StockCode)
+	assert.Equal(t, string(want), got)
 }
