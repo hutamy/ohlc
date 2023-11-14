@@ -1,0 +1,6 @@
+{"type":"A","order_book":"102","price":"8000","stock_code":"BBCA","quantity":"0"}
+{"type":"P","order_book":"722","execution_price":"8050","stock_code":"BBCA","executed_quantity":"100"}
+{"type":"P","order_book":"911","execution_price":"7950","stock_code":"BBCA","executed_quantity":"500"}
+{"type":"A","order_book":"192","price":"8150","stock_code":"BBCA","quantity":"200"}
+{"type":"E","order_book":"207","execution_price":"8100","stock_code":"BBCA","executed_quantity":"300"}
+{"type":"A","order_book":"1578","price":"8200","stock_code":"BBCA","quantity":"100"}
