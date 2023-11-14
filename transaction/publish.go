@@ -15,10 +15,12 @@ import (
 )
 
 type Transaction struct {
-	Type      string `json:"type"`
-	Price     int    `json:"execution_price,string"`
-	StockCode string `json:"stock_code"`
-	Quantity  int    `json:"executed_quantity,string"`
+	Type             string `json:"type"`
+	Price            int    `json:"price,string"`
+	StockCode        string `json:"stock_code"`
+	Quantity         int    `json:"quantity,string"`
+	ExecutedQuantity int    `json:"executed_quantity,string"`
+	ExecutionPrice   int    `json:"execution_price,string"`
 }
 
 type TrasactionPublisher struct {
@@ -67,6 +69,11 @@ func (t *TrasactionPublisher) Run(ctx context.Context) {
 				Price:     int32(tx.Price),
 				StockCode: tx.StockCode,
 				Quantity:  int32(tx.Quantity),
+			}
+
+			if tx.Type == "E" || tx.Type == "P" {
+				ohlcMsg.Price = int32(tx.ExecutionPrice)
+				ohlcMsg.Quantity = int32(tx.ExecutedQuantity)
 			}
 
 			ohlcBytes, err := proto.Marshal(ohlcMsg)
