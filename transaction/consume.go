@@ -83,6 +83,10 @@ func Calculate(summary *pb.Summary, tx *pb.Transaction) *pb.Summary {
 			summary.High = util.Max(summary.High, tx.Price)
 			summary.Low = util.Min(summary.Low, tx.Price)
 		}
+		// volume
+		summary.Volume += tx.Quantity
+		summary.Value += tx.Quantity * tx.Price
+		summary.Average = summary.Value / summary.Volume
 	}
 
 	return summary
