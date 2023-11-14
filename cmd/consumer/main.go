@@ -21,15 +21,6 @@ func main() {
 		}
 	}()
 
-	conn, err := kafka.NewKafkaPublisher(ctx)
-	defer func() {
-		if err = conn.Close(); err != nil {
-			log.Fatalln("Error closing connection:", err)
-		}
-	}()
-	publisher := transaction.NewTrasactionPublisher(conn)
-	publisher.Run(ctx)
-
 	reader, err := kafka.NewKafkaConsumer()
 	defer func() {
 		if err = reader.Close(); err != nil {

@@ -9,6 +9,3 @@ down:
 
 run:
 	go run cmd/service/main.go
-
-trx:
-	go run cmd/transaction/main.go

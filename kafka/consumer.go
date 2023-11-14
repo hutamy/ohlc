@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"log"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -32,5 +33,6 @@ func (k *KafkaConsumerClient) ReadMessage(ctx context.Context) ([]byte, error) {
 		return nil, err
 	}
 
+	log.Printf("Message received: %s", string(m.Value))
 	return m.Value, nil
 }

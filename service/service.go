@@ -2,12 +2,13 @@ package service
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"ohlc/redis"
 
 	pb "ohlc/proto"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type Service struct {
@@ -30,8 +31,8 @@ func (s *Service) GetOHLC(ctx context.Context, req *pb.StockRequest) (*pb.Summar
 		return nil, fmt.Errorf("OHLC summary not found")
 	}
 
-	var jsonOhlcSummary *pb.Summary
-	err = json.Unmarshal([]byte(ohlcSummary), &jsonOhlcSummary)
+	jsonOhlcSummary := &pb.Summary{}
+	err = proto.Unmarshal([]byte(ohlcSummary), jsonOhlcSummary)
 	if err != nil {
 		log.Printf("Failed to parse transaction: %v", err)
 	}

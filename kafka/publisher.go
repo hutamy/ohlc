@@ -36,5 +36,6 @@ func (k *KafkaPublisherClient) Publish(ctx context.Context, data []byte) error {
 		kafka.Message{Value: data},
 	)
 
+	log.Printf("Message sent: %s", string(data))
 	return err
 }

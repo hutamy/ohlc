@@ -26,7 +26,7 @@ func NewTrasactionConsumer(reader *kafka.KafkaConsumerClient, rdb *redis.RedisCl
 
 func (t *TrasactionConsumer) Run(ctx context.Context) {
 	for {
-		msg, err := t.reader.ReadMessage(context.Background())
+		msg, err := t.reader.ReadMessage(ctx)
 		if err != nil {
 			log.Printf("Failed to read message from Kafka: %v", err)
 			continue
@@ -47,9 +47,9 @@ func (t *TrasactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transacti
 		return
 	}
 
-	var value *pb.Summary
-	var strValue string
-	var err error
+	value := &pb.Summary{}
+	strValue := ""
+	var err error = nil
 
 	strValue, err = t.rdb.Get(ctx, ohlcMsg.StockCode)
 	if err == nil {
@@ -60,7 +60,12 @@ func (t *TrasactionConsumer) SetCache(ctx context.Context, ohlcMsg *pb.Transacti
 	}
 
 	value = t.Calculate(value, ohlcMsg)
-	if err = t.rdb.Set(ctx, ohlcMsg.StockCode, value); err != nil {
+	bytes, err := proto.Marshal(value)
+	if err != nil {
+		log.Printf("Failed to marshal summary: %v", err)
+	}
+
+	if err = t.rdb.Set(ctx, ohlcMsg.StockCode, bytes); err != nil {
 		log.Printf("Failed to set summary: %v", err)
 	}
 }
